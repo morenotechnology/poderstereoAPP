@@ -32,3 +32,4 @@ lib/
 - Cambia logos en `assets/branding/`.
 - Ajusta colores/tipografías en `lib/core/theme/app_theme.dart`.
 - Actualiza/añade enlaces en `AppConstants`.
+# poderstereoAPP
