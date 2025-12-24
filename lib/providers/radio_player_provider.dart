@@ -12,13 +12,16 @@ class RadioPlayerProvider extends ChangeNotifier {
 
   final RadioPlayerService _service;
   StreamSubscription<PlayerState>? _playerStateSub;
+  StreamSubscription<double>? _levelSub;
   bool _isBuffering = true;
   bool _isPlaying = false;
   String? _errorMessage;
+  double _currentLevel = 0;
 
   bool get isBuffering => _isBuffering;
   bool get isPlaying => _isPlaying;
   String? get errorMessage => _errorMessage;
+  double get level => _currentLevel;
 
   Future<void> _init() async {
     try {
@@ -27,6 +30,10 @@ class RadioPlayerProvider extends ChangeNotifier {
         _isPlaying = state.playing;
         _isBuffering = state.processingState == ProcessingState.loading ||
             state.processingState == ProcessingState.buffering;
+        notifyListeners();
+      });
+      _levelSub = _service.levelStream.listen((value) {
+        _currentLevel = value;
         notifyListeners();
       });
       _errorMessage = null;
@@ -57,6 +64,7 @@ class RadioPlayerProvider extends ChangeNotifier {
   @override
   void dispose() {
     _playerStateSub?.cancel();
+    _levelSub?.cancel();
     _service.dispose();
     super.dispose();
   }

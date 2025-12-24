@@ -40,7 +40,11 @@ class HomeScreen extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   physics: const BouncingScrollPhysics(),
                   children: [
-                    _WaveHero(isPlaying: radio.isPlaying, error: radio.errorMessage),
+                    _WaveHero(
+                      isPlaying: radio.isPlaying,
+                      error: radio.errorMessage,
+                      level: radio.level,
+                    ),
                     const SizedBox(height: 20),
                     const _BlogSlider(),
                     const SizedBox(height: 20),
@@ -85,14 +89,14 @@ class _Header extends StatelessWidget {
             children: const [
               Text(
                 'La radio que te conecta al cielo',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.2),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.2),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               SizedBox(height: 4),
               Text(
                 'Conexión en vivo 24/7',
-                style: TextStyle(color: Colors.white70, fontSize: 15),
+                style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
             ],
           ),
@@ -103,10 +107,11 @@ class _Header extends StatelessWidget {
 }
 
 class _WaveHero extends StatefulWidget {
-  const _WaveHero({required this.isPlaying, required this.error});
+  const _WaveHero({required this.isPlaying, required this.error, required this.level});
 
   final bool isPlaying;
   final String? error;
+  final double level;
 
   @override
   State<_WaveHero> createState() => _WaveHeroState();
@@ -124,7 +129,7 @@ class _WaveHeroState extends State<_WaveHero> with SingleTickerProviderStateMixi
 
   @override
   Widget build(BuildContext context) {
-    final amplitudeFactor = widget.isPlaying ? 1.0 : 0.4;
+    final amplitudeFactor = widget.isPlaying ? (0.2 + widget.level.clamp(0, 1) * 0.8) : 0.2;
     return ClipRRect(
       borderRadius: BorderRadius.circular(36),
       child: Container(
@@ -350,55 +355,69 @@ class _VerseOfDayCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFB23A48), Color(0xFFDA627D)],
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              'Versículo del día',
-              style: TextStyle(fontWeight: FontWeight.w600),
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/biblia.jpg',
+              fit: BoxFit.cover,
+              colorBlendMode: BlendMode.multiply,
+              color: Colors.black.withValues(alpha: 0.55),
             ),
           ),
-          const SizedBox(height: 14),
-          if (verseState.isLoading)
-            const Center(
-              child: SizedBox(
-                height: 28,
-                width: 28,
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
-            )
-          else if (verseState.error != null)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    verseState.error!,
-                    style: const TextStyle(color: Colors.white70),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFB23A48), Color(0xFFDA627D)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Versículo del día',
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
-                TextButton(
-                  style: TextButton.styleFrom(foregroundColor: Colors.white),
-                  onPressed: verseState.loadVerse,
-                  child: const Text('Reintentar'),
-                )
+                const SizedBox(height: 14),
+                if (verseState.isLoading)
+                  const Center(
+                    child: SizedBox(
+                      height: 28,
+                      width: 28,
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                  )
+                else if (verseState.error != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          verseState.error!,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(foregroundColor: Colors.white),
+                        onPressed: verseState.loadVerse,
+                        child: const Text('Reintentar'),
+                      )
+                    ],
+                  )
+                else if (verseState.verse != null)
+                  _VerseContent(verse: verseState.verse!),
               ],
-            )
-          else if (verseState.verse != null)
-            _VerseContent(verse: verseState.verse!),
+            ),
+          ),
         ],
       ),
     );
@@ -428,7 +447,7 @@ class _VerseContent extends StatelessWidget {
             backgroundColor: Colors.white.withOpacity(0.12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           ),
-          child: const Text('Leer completo'),
+          child: const Text('Tu versículo del día'),
         ),
       ],
     );
