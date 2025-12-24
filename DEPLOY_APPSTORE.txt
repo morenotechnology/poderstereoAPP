@@ -1,0 +1,50 @@
+Pasos para publicar la app en App Store
+======================================
+
+1. Cuenta y requisitos
+   - Crea o usa una Apple ID asociada a la empresa.
+   - Entra a https://developer.apple.com/programs/ y suscríbete al Apple Developer Program (99 USD/año).
+   - Verifica que tengas Xcode instalado desde la App Store y acepta la licencia: `sudo xcodebuild -license`.
+
+2. Instalar dependencias
+   - Instala Flutter y agrégalo al PATH.
+   - En el proyecto, ejecuta `flutter pub get`.
+   - Ve a `ios/` y corre `pod install` para asegurar dependencias nativas.
+
+3. Configurar firma en Xcode
+   - Abre el workspace: `open ios/Runner.xcworkspace`.
+   - En el target “Runner” > Signing & Capabilities:
+     * Selecciona el Team de tu Apple Developer Program.
+     * Define un Bundle Identifier único (ej. `com.tuempresa.poderstereo`).
+     * Activa Background Modes → Audio, AirPlay, Picture in Picture.
+   - Asegúrate de que `Info.plist` incluya los permisos de audio y la URL HTTPS.
+
+4. Crear la app en App Store Connect
+   - Ve a https://appstoreconnect.apple.com, sección “My Apps”.
+   - Crea una nueva app iOS con el mismo Bundle ID y llena los campos iniciales (nombre, idioma primario, SKU).
+
+5. Generar build release
+   - En la raíz del proyecto ejecuta `flutter build ipa` (o `flutter build ios --release` para generar el archive desde Xcode).
+   - Alternativamente, desde Xcode selecciona `Product > Archive` con el esquema Runner en modo Release.
+
+6. Subir el build
+   - Desde el Organizer de Xcode, selecciona el archive y pulsa “Distribute App” → App Store Connect → Upload.
+   - También puedes usar la app Transporter de Apple para subir el `.ipa`.
+
+7. Configurar metadata en App Store Connect
+   - Cuando el build aparezca en “TestFlight”/“App Store”, edita la versión:
+     * Sube capturas (iPhone 6.7", 6.5" y 5.5").
+     * Llena descripción, keywords, categoría, URL de soporte y marketing.
+     * Completa la sección “App Privacy” indicando qué datos recopila la app (si no recolecta datos, marca “No”).
+     * Define clasificación por edades (ratings).
+
+8. Pruebas con TestFlight (opcional)
+   - Habilita TestFlight para QA y añade testers internos/externos.
+
+9. Enviar a revisión
+   - En la página de la versión, marca las casillas de export compliance y presiona “Submit for Review”.
+   - Apple suele responder en 1-3 días hábiles; si rechazan, corrige y sube un nuevo build incrementando la versión.
+
+10. Mantenimiento
+   - Para futuras actualizaciones incrementa `version` y `build` en `pubspec.yaml`/Xcode.
+   - Asegúrate de renovar la membresía del Apple Developer Program cada año para mantener la app disponible.

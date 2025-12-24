@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 
 import '../services/blog_service.dart';
@@ -8,6 +10,7 @@ class BlogProvider extends ChangeNotifier {
   }
 
   final BlogService _service;
+  final Random _random = Random();
 
   List<BlogPost> _posts = const [];
   bool _isLoading = false;
@@ -22,7 +25,9 @@ class BlogProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      _posts = await _service.fetchPosts();
+      final posts = await _service.fetchPosts();
+      posts.shuffle(_random);
+      _posts = posts;
       _error = null;
     } catch (e) {
       _error = 'No pudimos cargar el blog.';

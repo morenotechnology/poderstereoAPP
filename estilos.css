@@ -1,0 +1,38 @@
+* Contenedor */
+.adoracion-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 0.95;
+}
+
+/* Tipografía */
+.adoracion-wrapper span {
+  font-family: "Myriad Pro", "MyriadPro-Regular", Arial, Helvetica, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+
+  /* Texto en degradado */
+  background: linear-gradient(
+    90deg,
+    #6d1f3c 0%,
+    #b54b6a 35%,
+    #f07c7c 65%,
+    #a73a6a 100%
+  );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Tamaños */
+.adoracion-top {
+  font-size: 50px;
+  letter-spacing: 0.5px;
+}
+
+.adoracion-bottom {
+  font-size: 106px;
+  letter-spacing: 1px;
+}

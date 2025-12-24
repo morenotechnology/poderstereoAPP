@@ -150,10 +150,17 @@ class _WaveHeroState extends State<_WaveHero> with SingleTickerProviderStateMixi
                     ),
                   ),
                 ),
-                const Positioned(
-                  top: 28,
-                  left: 26,
-                  child: _HeroTitle(),
+                Positioned(
+                  top: 24,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Image.asset(
+                      'assets/images/hero.png',
+                      width: 260,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
                 Positioned(
                   bottom: 24,
@@ -191,6 +198,7 @@ class _WaveHeroState extends State<_WaveHero> with SingleTickerProviderStateMixi
     );
   }
 }
+
 
 class _BlogSlider extends StatefulWidget {
   const _BlogSlider();
