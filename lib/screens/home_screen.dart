@@ -1,117 +1,47 @@
+import 'dart:math';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:glassmorphism_ui/glassmorphism_ui.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/constants/app_constants.dart';
 import '../providers/radio_player_provider.dart';
-import '../widgets/glass_card.dart';
-import '../widgets/live_indicator.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
     final radio = context.watch<RadioPlayerProvider>();
 
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF05020a), Color(0xFF10081c), Color(0xFF1b1030)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF19041F), Color(0xFF2A0D39)],
         ),
       ),
       child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Header(theme: theme),
-              const SizedBox(height: 24),
-              _FilterChips(),
-              const SizedBox(height: 24),
-              _FeaturedCard(size: size, isPlaying: radio.isPlaying),
-              const SizedBox(height: 20),
-              if (radio.errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Text(
-                    radio.errorMessage!,
-                    style: const TextStyle(color: Colors.redAccent),
-                  ),
-                ),
-              Text('Programación destacada', style: theme.textTheme.titleLarge),
-              const SizedBox(height: 12),
-              ..._topShows.map(
-                (show) => Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: GlassCard(
-                    padding: const EdgeInsets.all(16),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1c1b2b), Color(0xFF29283a)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
-                            image: DecorationImage(
-                              image: AssetImage(show.cover),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(show.title, style: theme.textTheme.titleMedium),
-                              Text(
-                                show.subtitle,
-                                style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          children: [
-                            const LiveIndicator(),
-                            const SizedBox(height: 6),
-                            Text(show.time, style: theme.textTheme.labelSmall),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+              const _Header(),
+              const SizedBox(height: 26),
+              Expanded(
+                child: Column(
+                  children: [
+                    _WaveHero(isPlaying: radio.isPlaying, error: radio.errorMessage),
+                    const SizedBox(height: 20),
+                    const _MoodRow(),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Text('Explora la familia Poder Stereo', style: theme.textTheme.titleLarge),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: _socialLinks
-                    .map(
-                      (link) => _SocialCard(
-                        icon: link.icon,
-                        title: link.title,
-                        description: link.description,
-                        onTap: () => _launch(link.url),
-                      ),
-                    )
-                    .toList(),
-              ),
+              const SizedBox(height: 26),
+              _BottomDock(radio: radio),
             ],
           ),
         ),
@@ -121,71 +51,207 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.theme});
-
-  final ThemeData theme;
+  const _Header();
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundImage: const AssetImage('assets/images/guest.jpg'),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Hola, familia', style: theme.textTheme.titleMedium),
-              Text(
-                'Poder Stereo',
-                style: theme.textTheme.displaySmall?.copyWith(fontSize: 30, fontWeight: FontWeight.w700),
+        Container(
+          width: 110,
+          height: 76,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE0535D), Color(0xFFF1772F), Color(0xFFB63FFF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Image.asset(
+              'assets/images/logo_stereo.png',
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
-        IconButton(
-          icon: const Icon(Icons.search_rounded),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: const Icon(Icons.favorite_outline_rounded),
-          onPressed: () {},
+        const SizedBox(width: 18),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                'La radio que te conecta al cielo',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.2),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Conexión en vivo 24/7',
+                style: TextStyle(color: Colors.white70, fontSize: 15),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 }
 
-class _FilterChips extends StatelessWidget {
-  static const List<String> _chips = ['Todo', 'Adoración', 'Podcast', 'En vivo'];
+class _WaveHero extends StatefulWidget {
+  const _WaveHero({required this.isPlaying, required this.error});
+
+  final bool isPlaying;
+  final String? error;
+
+  @override
+  State<_WaveHero> createState() => _WaveHeroState();
+}
+
+class _WaveHeroState extends State<_WaveHero> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller =
+      AnimationController(vsync: this, duration: const Duration(seconds: 6))..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final amplitudeFactor = widget.isPlaying ? 1.0 : 0.4;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(36),
+      child: Container(
+        height: 280,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF120726), Color(0xFF311146)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _WavePainter(
+                      phase: _controller.value * 2 * pi,
+                      amplitudeFactor: amplitudeFactor,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 28,
+                  left: 26,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'La paz interior',
+                        style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        'que todos deberían buscar',
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  bottom: 24,
+                  left: 26,
+                  right: 26,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.radio_rounded, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(
+                            widget.isPlaying ? 'Transmitiendo ahora' : 'Listo para reproducir',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ],
+                      ),
+                      if (widget.error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            widget.error!,
+                            style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _MoodRow extends StatelessWidget {
+  const _MoodRow();
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 38,
+      height: 130,
       child: ListView.separated(
+        padding: EdgeInsets.zero,
         scrollDirection: Axis.horizontal,
+        itemCount: 2,
         separatorBuilder: (context, _) => const SizedBox(width: 12),
-        itemCount: _chips.length,
         itemBuilder: (context, index) {
-          final selected = index == 0;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            decoration: BoxDecoration(
-              color: selected ? const Color(0xFFdbff6c) : Colors.white.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Center(
-              child: Text(
-                _chips[index],
-                style: TextStyle(
-                  color: selected ? Colors.black : Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+          final colors = index == 0
+              ? const [Color(0xFF663399), Color(0xFF3D2C5E)]
+              : const [Color(0xFF6F1D1B), Color(0xFFB23A48)];
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: Container(
+              width: 180,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: colors, begin: Alignment.topLeft, end: Alignment.bottomRight),
+              ),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.asset('assets/images/guest.jpg', fit: BoxFit.cover, colorBlendMode: BlendMode.multiply, color: Colors.black.withValues(alpha: 0.3)),
+                  ),
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('La paz interior', style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text('que todos deberían buscar', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -195,87 +261,73 @@ class _FilterChips extends StatelessWidget {
   }
 }
 
-class _FeaturedCard extends StatelessWidget {
-  const _FeaturedCard({required this.size, required this.isPlaying});
+class _BottomDock extends StatelessWidget {
+  const _BottomDock({required this.radio});
 
-  final Size size;
-  final bool isPlaying;
+  final RadioPlayerProvider radio;
 
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(32),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF3121ff), Color(0xFFb5179e)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('En vivo ahora', style: Theme.of(context).textTheme.bodyLarge),
-            const SizedBox(height: 6),
-            Text(
-              'Alabanza continua',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Conecta con la presencia de Dios 24/7 desde cualquier lugar.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                const LiveIndicator(),
-                const SizedBox(width: 12),
-                Text(isPlaying ? 'Transmitiendo' : 'Listo para reproducir'),
+      borderRadius: BorderRadius.circular(46),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withValues(alpha: 0.14),
+                Colors.white.withValues(alpha: 0.05),
               ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SocialCard extends StatelessWidget {
-  const _SocialCard({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: GlassContainer(
-        width: MediaQuery.of(context).size.width * 0.42,
-        blur: 16,
-        borderRadius: BorderRadius.circular(20),
-        color: Colors.white.withValues(alpha: 0.04),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            borderRadius: BorderRadius.circular(46),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Icon(icon, color: Colors.white, size: 24),
-              const SizedBox(height: 10),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-              const SizedBox(height: 4),
-              Text(description, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              _DockIcon(icon: FontAwesomeIcons.globe, onTap: () => _launch(AppConstants.websiteUrl)),
+              _DockIcon(icon: FontAwesomeIcons.whatsapp, onTap: () => _launch(AppConstants.whatsappCommunityUrl)),
+              GestureDetector(
+                onTap: radio.togglePlayback,
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF5F6D), Color(0xFFF7B42C), Color(0xFF7F00FF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        blurRadius: 30,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: radio.isBuffering
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.4),
+                          )
+                        : Icon(
+                            radio.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                  ),
+                ),
+              ),
+              _DockIcon(icon: FontAwesomeIcons.instagram, onTap: () => _launch(AppConstants.instagramUrl)),
+              _DockIcon(icon: FontAwesomeIcons.envelope, onTap: () => _launch('mailto:${AppConstants.contactEmail}')),
             ],
           ),
         ),
@@ -284,71 +336,111 @@ class _SocialCard extends StatelessWidget {
   }
 }
 
-class _ShowInfo {
-  const _ShowInfo({required this.title, required this.subtitle, required this.cover, required this.time});
-
-  final String title;
-  final String subtitle;
-  final String cover;
-  final String time;
-}
-
-const _topShows = [
-  _ShowInfo(
-    title: 'Amanecer de Gracia',
-    subtitle: 'Con Ps. Daniela Vélez',
-    cover: 'assets/images/guest.jpg',
-    time: '05:00 AM',
-  ),
-  _ShowInfo(
-    title: 'Fuego en Vivo',
-    subtitle: 'Luces de Poder Stereo',
-    cover: 'assets/images/guest.jpg',
-    time: '12:00 PM',
-  ),
-  _ShowInfo(
-    title: 'Noches de intimidad',
-    subtitle: 'Sábados especiales',
-    cover: 'assets/images/guest.jpg',
-    time: '09:00 PM',
-  ),
-];
-
-class _SocialLink {
-  const _SocialLink({required this.icon, required this.title, required this.description, required this.url});
+class _DockIcon extends StatelessWidget {
+  const _DockIcon({required this.icon, required this.onTap});
 
   final IconData icon;
-  final String title;
-  final String description;
-  final String url;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        child: Icon(icon, color: Colors.white, size: 21),
+      ),
+    );
+  }
 }
 
-const _socialLinks = [
-  _SocialLink(
-    icon: Icons.language_rounded,
-    title: 'Sitio Oficial',
-    description: AppConstants.websiteUrl,
-    url: AppConstants.websiteUrl,
-  ),
-  _SocialLink(
-    icon: Icons.chat_bubble_outline,
-    title: 'WhatsApp',
-    description: 'Únete a la comunidad',
-    url: AppConstants.whatsappCommunityUrl,
-  ),
-  _SocialLink(
-    icon: Icons.camera_alt_outlined,
-    title: 'Instagram',
-    description: '@poderstereo',
-    url: AppConstants.instagramUrl,
-  ),
-  _SocialLink(
-    icon: Icons.mail_outline_rounded,
-    title: 'Email',
-    description: AppConstants.contactEmail,
-    url: 'mailto:${AppConstants.contactEmail}',
-  ),
-];
+class _WavePainter extends CustomPainter {
+  const _WavePainter({required this.phase, required this.amplitudeFactor});
+
+  final double phase;
+  final double amplitudeFactor;
+
+  static const _layers = [
+    _WaveLayer(color: Color(0xFFFF5050), amplitude: 68, depth: 0.9, strokeWidth: 2.3),
+    _WaveLayer(color: Color(0xFFFFA03C), amplitude: 54, depth: 0.75, strokeWidth: 1.9),
+    _WaveLayer(color: Color(0xFFB450FF), amplitude: 44, depth: 0.65, strokeWidth: 1.6),
+    _WaveLayer(color: Color(0xFF50A0FF), amplitude: 34, depth: 0.5, strokeWidth: 1.3),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centerY = size.height * 0.55;
+    const points = 160;
+    final step = size.width / points;
+
+    for (final layer in _layers) {
+      final amplitude = layer.amplitude * amplitudeFactor;
+      final path = Path();
+
+      for (int i = 0; i <= points; i++) {
+        final x = i * step;
+        final wave = sin(i * 0.15 + phase);
+        final depth = sin(i * 0.05 - phase * 0.6);
+        final y = centerY + wave * amplitude + depth * amplitude * layer.depth;
+        if (i == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
+      }
+
+      final linePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = layer.strokeWidth
+        ..color = layer.color
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+
+      canvas.drawPath(path, linePaint);
+
+      // Mesh style verticals to give the wave depth.
+      final meshPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = layer.color.withOpacity(0.25);
+
+      for (int i = 0; i <= points; i += 4) {
+        final x = i * step;
+        final offset = sin(i * 0.2 + phase) * amplitude;
+        final meshPath = Path()
+          ..moveTo(x, centerY - offset * 0.6)
+          ..lineTo(x, centerY + offset * 0.6);
+        canvas.drawPath(meshPath, meshPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _WavePainter oldDelegate) {
+    return oldDelegate.phase != phase || oldDelegate.amplitudeFactor != amplitudeFactor;
+  }
+}
+
+class _WaveLayer {
+  const _WaveLayer({
+    required this.color,
+    required this.amplitude,
+    required this.depth,
+    required this.strokeWidth,
+  });
+
+  final Color color;
+  final double amplitude;
+  final double depth;
+  final double strokeWidth;
+}
 
 Future<void> _launch(String url) async {
   final uri = Uri.parse(url);
