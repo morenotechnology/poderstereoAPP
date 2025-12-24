@@ -7,7 +7,11 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/constants/app_constants.dart';
+import '../providers/blog_provider.dart';
 import '../providers/radio_player_provider.dart';
+import '../providers/verse_provider.dart';
+import '../services/blog_service.dart';
+import '../services/verse_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -32,15 +36,19 @@ class HomeScreen extends StatelessWidget {
               const _Header(),
               const SizedBox(height: 26),
               Expanded(
-                child: Column(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  physics: const BouncingScrollPhysics(),
                   children: [
                     _WaveHero(isPlaying: radio.isPlaying, error: radio.errorMessage),
                     const SizedBox(height: 20),
-                    const _MoodRow(),
+                    const _BlogSlider(),
+                    const SizedBox(height: 20),
+                    const _VerseOfDayCard(),
+                    const SizedBox(height: 22),
                   ],
                 ),
               ),
-              const SizedBox(height: 26),
               _BottomDock(radio: radio),
             ],
           ),
@@ -58,33 +66,18 @@ class _Header extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 110,
-          height: 76,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFE0535D), Color(0xFFF1772F), Color(0xFFB63FFF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.35),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
+        SizedBox(
+          height: 90,
+          child: Align(
+            alignment: Alignment.centerLeft,
             child: Image.asset(
               'assets/images/logo_stereo.png',
               fit: BoxFit.contain,
+              height: 90,
             ),
           ),
         ),
-        const SizedBox(width: 18),
+        const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,22 +150,10 @@ class _WaveHeroState extends State<_WaveHero> with SingleTickerProviderStateMixi
                     ),
                   ),
                 ),
-                Positioned(
+                const Positioned(
                   top: 28,
                   left: 26,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'La paz interior',
-                        style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
-                      ),
-                      Text(
-                        'que todos deberían buscar',
-                        style: TextStyle(color: Colors.white70, fontSize: 16),
-                      ),
-                    ],
-                  ),
+                  child: _HeroTitle(),
                 ),
                 Positioned(
                   bottom: 24,
@@ -211,54 +192,298 @@ class _WaveHeroState extends State<_WaveHero> with SingleTickerProviderStateMixi
   }
 }
 
-class _MoodRow extends StatelessWidget {
-  const _MoodRow();
+class _BlogSlider extends StatefulWidget {
+  const _BlogSlider();
+
+  @override
+  State<_BlogSlider> createState() => _BlogSliderState();
+}
+
+class _BlogSliderState extends State<_BlogSlider> {
+  late final PageController _controller = PageController(viewportFraction: 0.78);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final blogState = context.watch<BlogProvider>();
+
     return SizedBox(
-      height: 130,
-      child: ListView.separated(
-        padding: EdgeInsets.zero,
-        scrollDirection: Axis.horizontal,
-        itemCount: 2,
-        separatorBuilder: (context, _) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final colors = index == 0
-              ? const [Color(0xFF663399), Color(0xFF3D2C5E)]
-              : const [Color(0xFF6F1D1B), Color(0xFFB23A48)];
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(22),
-            child: Container(
-              width: 180,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: colors, begin: Alignment.topLeft, end: Alignment.bottomRight),
-              ),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Image.asset('assets/images/guest.jpg', fit: BoxFit.cover, colorBlendMode: BlendMode.multiply, color: Colors.black.withValues(alpha: 0.3)),
-                  ),
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    right: 16,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('La paz interior', style: TextStyle(fontWeight: FontWeight.w600)),
-                        Text('que todos deberían buscar', style: TextStyle(fontSize: 12, color: Colors.white70)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      height: 168,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (blogState.isLoading) {
+            return const Center(child: CircularProgressIndicator(color: Colors.white));
+          }
+
+          if (blogState.error != null) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(blogState.error!, style: const TextStyle(color: Colors.white70)),
+                TextButton(onPressed: blogState.loadPosts, child: const Text('Reintentar')),
+              ],
+            );
+          }
+
+          if (blogState.posts.isEmpty) {
+            return const Center(
+              child: Text('No hay publicaciones aún.', style: TextStyle(color: Colors.white70)),
+            );
+          }
+
+          final cardWidth = constraints.maxWidth * 0.78;
+          return PageView.builder(
+            controller: _controller,
+            padEnds: false,
+            itemCount: blogState.posts.length,
+            itemBuilder: (context, index) {
+              final post = blogState.posts[index];
+              return Padding(
+                padding: EdgeInsets.only(right: index == blogState.posts.length - 1 ? 0 : 14),
+                child: SizedBox(width: cardWidth, child: _BlogCard(post: post)),
+              );
+            },
           );
         },
       ),
     );
   }
+}
+
+class _BlogCard extends StatelessWidget {
+  const _BlogCard({required this.post});
+
+  final BlogPost post;
+
+  @override
+  Widget build(BuildContext context) {
+    final summary = post.summary.isNotEmpty
+        ? (post.summary.length > 100 ? '${post.summary.substring(0, 100)}…' : post.summary)
+        : 'Pronto compartiremos más detalles.';
+    final destination = Uri.parse('https://poderstereolivetv.com/${post.slug}');
+
+    return GestureDetector(
+      onTap: () => launchUrl(destination, mode: LaunchMode.externalApplication),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(26),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2C0F4D), Color(0xFF81277D)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Stack(
+            children: [
+              if (post.imageUrl != null)
+                Positioned.fill(
+                  child: Image.network(
+                    post.imageUrl!,
+                    fit: BoxFit.cover,
+                    colorBlendMode: BlendMode.multiply,
+                    color: Colors.black.withOpacity(0.45),
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 18,
+                right: 18,
+                bottom: 18,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      post.title,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      summary,
+                      style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.3),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VerseOfDayCard extends StatelessWidget {
+  const _VerseOfDayCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final verseState = context.watch<VerseProvider>();
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFB23A48), Color(0xFFDA627D)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              'Versículo del día',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (verseState.isLoading)
+            const Center(
+              child: SizedBox(
+                height: 28,
+                width: 28,
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            )
+          else if (verseState.error != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    verseState.error!,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: Colors.white),
+                  onPressed: verseState.loadVerse,
+                  child: const Text('Reintentar'),
+                )
+              ],
+            )
+          else if (verseState.verse != null)
+            _VerseContent(verse: verseState.verse!),
+        ],
+      ),
+    );
+  }
+}
+
+class _VerseContent extends StatelessWidget {
+  const _VerseContent({required this.verse});
+
+  final BibleVerse verse;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          verse.reference,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+        ),
+        const SizedBox(height: 10),
+        TextButton(
+          onPressed: () => _showVerseDialog(context, verse),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            backgroundColor: Colors.white.withOpacity(0.12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          ),
+          child: const Text('Leer completo'),
+        ),
+      ],
+    );
+  }
+}
+
+Future<void> _showVerseDialog(BuildContext context, BibleVerse verse) {
+  return showGeneralDialog(
+    context: context,
+    barrierLabel: 'Cerrar',
+    barrierDismissible: true,
+    barrierColor: Colors.black.withOpacity(0.6),
+    pageBuilder: (context, _, __) {
+      return Center(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1028).withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Versículo completo',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.close, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      verse.reference,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      verse.text,
+                      style: const TextStyle(color: Colors.white70, height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class _BottomDock extends StatelessWidget {
