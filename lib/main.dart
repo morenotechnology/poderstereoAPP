@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
 import 'core/theme/app_theme.dart';
@@ -51,10 +52,66 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
+  bool _showSplash = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _prepare();
+    });
+  }
+
+  Future<void> _prepare() async {
+    final blog = context.read<BlogProvider>();
+    final verse = context.read<VerseProvider>();
+    final radio = context.read<RadioPlayerProvider>();
+    await Future.wait([
+      Future.delayed(const Duration(seconds: 3)),
+      blog.ready,
+      verse.ready,
+      radio.ready,
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _showSplash = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: const HomeScreen(),
+      body: Stack(
+        children: [
+          const HomeScreen(),
+          if (_showSplash) const _SplashOverlay(),
+        ],
+      ),
+    );
+  }
+}
+
+class _SplashOverlay extends StatelessWidget {
+  const _SplashOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF19041F), Color(0xFF2A0D39)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Center(
+        child: Lottie.network(
+          'https://lottie.host/a5371b50-8e20-489f-b0a1-6b2cc01b5240/oNrUZte5SJ.json',
+          width: 320,
+          fit: BoxFit.contain,
+          repeat: true,
+        ),
+      ),
     );
   }
 }

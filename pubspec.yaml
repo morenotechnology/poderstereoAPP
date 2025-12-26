@@ -43,6 +43,7 @@ dependencies:
   audio_session: ^0.2.2
   provider: ^6.1.5+1
   font_awesome_flutter: ^10.7.0
+  lottie: ^3.1.0
   http: ^1.2.1
   html_unescape: ^2.0.0
 
@@ -72,6 +73,8 @@ flutter:
     - assets/branding/
     - assets/images/
     - assets/fonts/
+    - assets/splash/animation.json
+    - assets/splash/images/
 
   fonts:
     - family: Poppins

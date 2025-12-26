@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../services/verse_service.dart';
@@ -8,6 +10,7 @@ class VerseProvider extends ChangeNotifier {
   }
 
   final VerseService _service;
+  final Completer<void> _readyCompleter = Completer<void>();
 
   BibleVerse? _verse;
   bool _isLoading = false;
@@ -16,6 +19,7 @@ class VerseProvider extends ChangeNotifier {
   BibleVerse? get verse => _verse;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  Future<void> get ready => _readyCompleter.future;
 
   Future<void> loadVerse() async {
     if (_isLoading) return;
@@ -28,6 +32,9 @@ class VerseProvider extends ChangeNotifier {
       _error = 'No pudimos obtener el versículo.';
     } finally {
       _isLoading = false;
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.complete();
+      }
       notifyListeners();
     }
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,7 @@ class BlogProvider extends ChangeNotifier {
   }
 
   final BlogService _service;
+  final Completer<void> _readyCompleter = Completer<void>();
   final Random _random = Random();
 
   List<BlogPost> _posts = const [];
@@ -19,6 +21,7 @@ class BlogProvider extends ChangeNotifier {
   List<BlogPost> get posts => _posts;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  Future<void> get ready => _readyCompleter.future;
 
   Future<void> loadPosts() async {
     if (_isLoading) return;
@@ -33,6 +36,9 @@ class BlogProvider extends ChangeNotifier {
       _error = 'No pudimos cargar el blog.';
     } finally {
       _isLoading = false;
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.complete();
+      }
       notifyListeners();
     }
   }

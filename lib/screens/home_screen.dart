@@ -374,20 +374,11 @@ class _VerseOfDayCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFB23A48), Color(0xFFDA627D)],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Versículo del día',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
+                const Text(
+                  'Versículo del día',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 if (verseState.isLoading)
                   const Center(
                     child: SizedBox(

@@ -11,7 +11,7 @@ class RadioPlayerService {
   bool _configured = false;
   final StreamController<double> _levelController = StreamController<double>.broadcast();
   final Random _rng = Random();
-  Timer? _levelTimer;
+  StreamSubscription<Duration>? _positionSub;
 
   AudioPlayer get player => _player;
   Stream<double> get levelStream => _levelController.stream;
@@ -45,16 +45,29 @@ class RadioPlayerService {
   }
 
   void _startLevelMonitoring() {
-    _levelTimer ??= Timer.periodic(const Duration(milliseconds: 120), (_) {
-      final base = _player.playing ? 0.35 + _rng.nextDouble() * 0.65 : 0.05;
-      final level = (_player.volume.clamp(0.0, 1.0)) * base;
-      _levelController.add(level);
+    _positionSub ??= _player
+        .createPositionStream(
+          minPeriod: const Duration(milliseconds: 60),
+          maxPeriod: const Duration(milliseconds: 120),
+        )
+        .listen((position) {
+      if (!_player.playing) {
+        _levelController.add(0);
+        return;
+      }
+      final t = position.inMilliseconds / 220.0;
+      final waveA = (sin(t) + 1) / 2;
+      final waveB = (sin(t * 1.7 + pi / 3) + 1) / 2;
+      final jitter = _rng.nextDouble() * 0.12;
+      var level = 0.35 + 0.65 * (waveA * 0.7 + waveB * 0.3) + jitter;
+      level *= _player.volume.clamp(0.0, 1.0);
+      _levelController.add(level.clamp(0.0, 1.0));
     });
   }
 
   void _stopLevelMonitoring() {
-    _levelTimer?.cancel();
-    _levelTimer = null;
+    _positionSub?.cancel();
+    _positionSub = null;
     _levelController.add(0);
   }
 

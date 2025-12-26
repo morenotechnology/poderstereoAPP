@@ -11,6 +11,7 @@ class RadioPlayerProvider extends ChangeNotifier {
   }
 
   final RadioPlayerService _service;
+  final Completer<void> _readyCompleter = Completer<void>();
   StreamSubscription<PlayerState>? _playerStateSub;
   StreamSubscription<double>? _levelSub;
   bool _isBuffering = true;
@@ -22,6 +23,7 @@ class RadioPlayerProvider extends ChangeNotifier {
   bool get isPlaying => _isPlaying;
   String? get errorMessage => _errorMessage;
   double get level => _currentLevel;
+  Future<void> get ready => _readyCompleter.future;
 
   Future<void> _init() async {
     try {
@@ -42,6 +44,10 @@ class RadioPlayerProvider extends ChangeNotifier {
       _errorMessage = 'No pudimos conectar con la señal. Intenta de nuevo.';
       debugPrint('Radio init error: $error');
       notifyListeners();
+    } finally {
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.complete();
+      }
     }
   }
 
