@@ -97,19 +97,19 @@ class _SplashOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF19041F), Color(0xFF2A0D39)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
+      color: Colors.black,
       child: Center(
-        child: Lottie.network(
-          'https://lottie.host/a5371b50-8e20-489f-b0a1-6b2cc01b5240/oNrUZte5SJ.json',
-          width: 320,
-          fit: BoxFit.contain,
-          repeat: true,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SizedBox(
+              width: constraints.maxWidth * 0.7,
+              child: Lottie.network(
+                'https://lottie.host/a5371b50-8e20-489f-b0a1-6b2cc01b5240/oNrUZte5SJ.json',
+                fit: BoxFit.contain,
+                repeat: true,
+              ),
+            );
+          },
         ),
       ),
     );
