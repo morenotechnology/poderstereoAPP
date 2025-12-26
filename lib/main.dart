@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
 import 'core/theme/app_theme.dart';
@@ -91,27 +90,88 @@ class _MainShellState extends State<MainShell> {
   }
 }
 
-class _SplashOverlay extends StatelessWidget {
+class _SplashOverlay extends StatefulWidget {
   const _SplashOverlay();
 
   @override
+  State<_SplashOverlay> createState() => _SplashOverlayState();
+}
+
+class _SplashOverlayState extends State<_SplashOverlay>
+    with TickerProviderStateMixin {
+  late AnimationController _gradientController;
+  late AnimationController _logoController;
+  late Animation<double> _logoScale;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Gradient animation - cycles through colors
+    _gradientController = AnimationController(
+      duration: const Duration(seconds: 4),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    // Logo pulse animation
+    _logoController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _logoScale = Tween<double>(begin: 0.95, end: 1.05).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _gradientController.dispose();
+    _logoController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      child: Center(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SizedBox(
-              width: constraints.maxWidth * 0.7,
-              child: Lottie.network(
-                'https://lottie.host/a5371b50-8e20-489f-b0a1-6b2cc01b5240/oNrUZte5SJ.json',
+    return AnimatedBuilder(
+      animation: _gradientController,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(
+                  const Color(0xFF19041F),
+                  const Color(0xFF2A0D39),
+                  _gradientController.value,
+                )!,
+                Color.lerp(
+                  const Color(0xFF2A0D39),
+                  const Color(0xFF6B0F1A),
+                  _gradientController.value,
+                )!,
+                Color.lerp(
+                  const Color(0xFF1A0A2E),
+                  const Color(0xFF4A0E4E),
+                  _gradientController.value,
+                )!,
+              ],
+            ),
+          ),
+          child: Center(
+            child: ScaleTransition(
+              scale: _logoScale,
+              child: Image.asset(
+                'assets/images/logo_stereo.png',
+                width: 220,
                 fit: BoxFit.contain,
-                repeat: true,
               ),
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
